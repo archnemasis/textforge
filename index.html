@@ -242,5 +242,9 @@ const a=document.createElement('button');a.className='add';a.textContent='+ Add 
 const ff=document.createElement('input');ff.type='file';ff.accept='.ttf,.otf,.woff,.woff2';ff.id='ffile';ff.style.display='none';document.body.appendChild(ff);
 ff.onchange=()=>{const f=ff.files[0];if(!f)return;f.arrayBuffer().then(buf=>{const o={name:f.name.replace(/[.][^.]*$/,''),fam:'U'+FONTS.length,buf};return faceFor(o).then(()=>{FONTS.push(o);curF=FONTS.length-1;$('fname').textContent=o.name;$('fname').style.fontFamily='"'+o.fam+'"';renderList();draw()})}).catch(()=>{$('note').textContent='That font file could not be loaded.'});ff.value=''};
 $('fpick').onclick=e=>{e.stopPropagation();$('flist').classList.toggle('open')};document.addEventListener('click',e=>{if(!$('flist').contains(e.target))$('flist').classList.remove('open')});
-Promise.all(FONTS.map(f=>faceFor(f).catch(()=>{f.broken=true}))).then(()=>{ready=true;applyPreset(FONTS[0],null);$('fname').textContent=FONTS[0].name;$('fname').style.fontFamily='"'+FONTS[0].fam+'"';renderList();stageBg();draw()});
+Promise.all(FONTS.map(f=>faceFor(f).catch(()=>{f.broken=true}))).then(()=>{
+// Hide fonts whose file is missing so they don't show up in a fallback font.
+for(let i=FONTS.length-1;i>=0;i--)if(FONTS[i].broken)FONTS.splice(i,1);
+if(!FONTS.length){$('note').textContent='No fonts could be loaded. Add font files to the fonts/ folder.';return}
+ready=true;applyPreset(FONTS[0],null);$('fname').textContent=FONTS[0].name;$('fname').style.fontFamily='"'+FONTS[0].fam+'"';renderList();stageBg();draw()});
 </script></body></html>
