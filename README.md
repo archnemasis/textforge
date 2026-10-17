@@ -1,7 +1,12 @@
 # TextForge
 
-A text generator that runs in the browser. Type your text, pick a style (Arcade, Neon, Chrome, Fire, Bubble and more), tweak the font, fill, outlines, 3D depth, shadow and glow, then download it as a PNG or copy it to the clipboard.
+Free, no-limit text effect generator for game-style fonts (Super Mario 256, Roblox 2015, Roblox 2006, ...).
+Outline, 3D shadow, per-letter colours, transparent PNG download.
 
-Live: https://archnemasis.github.io/textforge/
+## Adding a font
+1. Put the `.ttf` / `.otf` in `fonts/`.
+2. Add an entry to `fonts.js` (name, file, sample text, starting style).
 
-Everything is in `index.html`; there is nothing to install or build. Open the file in a browser to run it locally.
+Hosted with GitHub Pages: Settings → Pages → Deploy from branch → `main` / root.
+
+Fonts belong to their creators and are for personal use. Not affiliated with TextStudio, Nintendo or Roblox.
