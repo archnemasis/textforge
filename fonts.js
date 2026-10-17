@@ -15,7 +15,7 @@ window.TF_FONTS = [
   },
   {
     name: 'Roblox 2015',
-    file: 'fonts/Roblox2015.ttf',
+    file: 'fonts/BobloxClassic.ttf',
     sample: 'ROBLOX\n2015',
     preset: {
       pal: ['#ffffff'],
@@ -26,7 +26,7 @@ window.TF_FONTS = [
   },
   {
     name: 'Roblox 2006',
-    file: 'fonts/BobloxClassic.ttf',
+    file: 'fonts/Roblox2006.ttf',
     sample: 'ROBLOX',
     preset: {
       pal: ['#e2231a'],
