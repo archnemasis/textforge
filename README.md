@@ -1,10 +1,7 @@
-# Orbit Hop
+# TextForge
 
-A one-button arcade game that runs in the browser. You circle a planet on one of two orbits. Tap (or press space) to jump between them, dodge the red stars and grab the gold gems for +5.
+A text generator that runs in the browser. Type your text, pick a style (Arcade, Neon, Chrome, Fire, Bubble and more), tweak the font, fill, outlines, 3D depth, shadow and glow, then download it as a PNG or copy it to the clipboard.
 
-Play it: open `index.html` in any browser. No install is needed.
+Live: https://archnemasis.github.io/textforge/
 
-## Put it online for free (GitHub Pages)
-1. On GitHub, go to this repo's **Settings → Pages**.
-2. Under "Build and deployment", set Source to **Deploy from a branch**, pick the branch and the `/ (root)` folder, then save.
-3. After about a minute your game is live at `https://<your-username>.github.io/fluffy-waffle/`.
+Everything is in `index.html`; there is nothing to install or build. Open the file in a browser to run it locally.

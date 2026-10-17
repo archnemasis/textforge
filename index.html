@@ -2,276 +2,614 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TextForge — Text Generator</title>
+<meta name="description" content="Make styled text images: outlines, 3D, glow, gradients. Download as PNG.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Cinzel:wght@900&family=Creepster&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700&family=Lilita+One&family=Luckiest+Guy&family=Monoton&family=Orbitron:wght@900&family=Pacifico&family=Permanent+Marker&family=Press+Start+2P&family=Righteous&family=Rubik+Mono+One&family=Russo+One&family=Silkscreen&display=swap">
+<style>
+  :root {
+    --bg: #0f0c1d;
+    --panel: #18142b;
+    --panel-2: #211b3a;
+    --line: #2f2850;
+    --text: #ece9f7;
+    --muted: #9b94b8;
+    --accent: #ffd23f;
+    --accent-ink: #1a1203;
+    --focus: #7c5cff;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  header {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    padding: 18px 24px 10px;
+  }
+  .logo {
+    font-family: Bungee, Inter, sans-serif; font-size: 28px; letter-spacing: 1px; margin: 0; font-weight: 400;
+    background: linear-gradient(#fff35c, #ff8a1f); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 3px 0 #3b0a5c);
+  }
+  .tagline { color: var(--muted); margin: 0; }
+
+  .app {
+    display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px;
+    padding: 8px 24px 32px; align-items: start;
+  }
+  .stage { display: flex; flex-direction: column; gap: 14px; min-width: 0; position: sticky; top: 12px; }
+
+  .preview {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    min-height: 300px; max-height: 58vh; display: grid; place-items: center; padding: 20px; overflow: hidden;
+    background-color: #1d1933;
+    background-image:
+      linear-gradient(45deg, #26213f 25%, transparent 25%), linear-gradient(-45deg, #26213f 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #26213f 75%), linear-gradient(-45deg, transparent 75%, #26213f 75%);
+    background-size: 22px 22px; background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+  }
+  .preview.light {
+    background-color: #f3f2f7;
+    background-image:
+      linear-gradient(45deg, #e2e0ea 25%, transparent 25%), linear-gradient(-45deg, #e2e0ea 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e2e0ea 75%), linear-gradient(-45deg, transparent 75%, #e2e0ea 75%);
+  }
+  #out { max-width: 100%; max-height: calc(58vh - 40px); width: auto; height: auto; display: block; }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .meta { color: var(--muted); font-variant-numeric: tabular-nums; display: flex; gap: 12px; align-items: center; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px;
+    padding: 9px 14px; cursor: pointer; font-weight: 600;
+  }
+  .btn:hover { border-color: #4a4180; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.small { padding: 5px 10px; font-size: 12px; font-weight: 500; }
+
+  textarea#text {
+    width: 100%; resize: vertical; min-height: 64px; padding: 12px 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    font-size: 18px; font-weight: 600;
+  }
+
+  h2.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 0 8px; font-weight: 600; }
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .preset {
+    height: 64px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+    cursor: pointer; padding: 6px; display: grid; place-items: center;
+  }
+  .preset:hover { border-color: #4a4180; background: var(--panel-2); }
+  .preset[aria-pressed="true"] { border-color: var(--accent); }
+  .preset img { max-width: 100%; max-height: 50px; display: block; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  details { border-bottom: 1px solid var(--line); }
+  summary {
+    cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "▾"; color: var(--muted); transition: transform .15s; }
+  details:not([open]) summary::after { transform: rotate(-90deg); }
+  .fields { padding: 0 16px 14px; display: grid; gap: 10px; }
+  .field { display: grid; gap: 5px; min-width: 0; }
+  .field[hidden] { display: none; }
+  .field > .top { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 12px; }
+  .field output { color: var(--text); font-variant-numeric: tabular-nums; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; }
+  select {
+    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2);
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 2px 0; }
+  input[type="color"] {
+    width: 100%; height: 34px; padding: 2px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer;
+  }
+  .check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .panel-foot { padding: 12px 16px; display: flex; justify-content: flex-end; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+    background: #2a2347; border: 1px solid #4a4180; padding: 10px 16px; border-radius: 10px;
+    opacity: 0; pointer-events: none; transition: .2s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+
+  @media (max-width: 900px) {
+    header { padding: 14px 16px 6px; }
+    .app { grid-template-columns: 1fr; padding: 8px 16px 24px; }
+    .stage { position: static; }
+    .preview { min-height: 200px; max-height: 44vh; padding: 12px; }
+    #out { max-height: calc(44vh - 24px); }
+  }
+</style>
 </head>
 <body>
-<title>Orbit Hop</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@400;600&display=swap">
-<style>
-/* Layout: one full-bleed canvas stage, HUD pinned to the corners, a message panel in the lower third. Single committed night-sky look. */
-:root{
-  --sky:#0d0b26; --sky-2:#1c1546; --ring:#6c63b8; --hero:#5ef2d6;
-  --hazard:#ff5d73; --gold:#ffc94d; --ink:#efeaff; --muted:#a59fd0;
-  --display:"Bungee","Arial Black",Impact,sans-serif;
-  --body:"Chakra Petch","Trebuchet MS",system-ui,sans-serif;
-  color-scheme:dark;
-}
-html,body{height:100%;margin:0}
-[hidden]{display:none!important}
-body{background:var(--sky);color:var(--ink);font-family:var(--body);overflow:hidden;
-  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-#stage{position:relative;height:100%;width:100%}
-canvas{display:block;width:100%;height:100%;cursor:pointer}
-.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
-  gap:12px;padding:14px 16px;pointer-events:none}
-.brand{font-family:var(--display);font-size:15px;letter-spacing:.06em;color:var(--hero)}
-.right{display:flex;align-items:center;gap:14px;pointer-events:auto}
-.best{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
-.best b{color:var(--gold);font-weight:600}
-button.mute{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--ring);
-  border-radius:999px;padding:5px 12px;cursor:pointer}
-button.mute:focus-visible{outline:2px solid var(--hero);outline-offset:2px}
-.panel{position:absolute;left:16px;right:16px;bottom:max(7%,24px);display:flex;flex-direction:column;align-items:center;
-  gap:10px;text-align:center;pointer-events:none}
-.panel h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,9vw,68px);line-height:1;margin:0;
-  color:var(--ink);text-shadow:0 0 24px rgba(94,242,214,.45);text-wrap:balance}
-.panel h1 span{color:var(--hero)}
-.panel p{margin:0;max-width:34ch;color:var(--muted);font-size:16px;line-height:1.45}
-.panel .go{margin-top:6px;font-family:var(--display);font-size:15px;letter-spacing:.08em;color:var(--gold);
-  animation:blink 1.2s ease-in-out infinite}
-.legend{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:14px;color:var(--ink)}
-.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle}
-.legend .h{background:var(--hazard);transform:rotate(45deg)}
-.legend .g{background:var(--gold);border-radius:2px;transform:rotate(45deg) scale(.85)}
-.legend .p{background:var(--hero);border-radius:50%}
-@keyframes blink{50%{opacity:.35}}
-@media (prefers-reduced-motion:reduce){.panel .go{animation:none}}
-</style>
+<header>
+  <h1 class="logo">TextForge</h1>
+  <p class="tagline">Type it, style it, download it as a PNG.</p>
+</header>
 
-<div id="stage">
-  <canvas id="c" aria-label="Orbit Hop game. Press space or tap to switch orbits."></canvas>
-  <div class="hud">
-    <div class="brand">ORBIT HOP</div>
-    <div class="right">
-      <div class="best">Best <b id="best">0</b></div>
-      <button class="mute" id="mute" type="button">Sound: on</button>
+<main class="app">
+  <section class="stage">
+    <div class="preview" id="preview"><canvas id="out" aria-label="Text preview"></canvas></div>
+    <div class="bar">
+      <div class="meta">
+        <span id="dims">—</span>
+        <button class="btn small" id="previewBg" type="button">Light preview</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="shuffle" type="button">Shuffle</button>
+        <button class="btn" id="copy" type="button">Copy</button>
+        <button class="btn primary" id="download" type="button">Download PNG</button>
+      </div>
     </div>
-  </div>
-  <div class="panel" id="panel">
-    <h1 id="headline">ORBIT <span>HOP</span></h1>
-    <p id="msg">Tap, click or press space to jump between the two orbits.</p>
-    <div class="legend" id="legend"><span><i class="p"></i>You</span><span><i class="h"></i>Dodge</span><span><i class="g"></i>+5 points</span></div>
-    <div class="go" id="go">TAP TO LAUNCH</div>
-  </div>
-</div>
+    <textarea id="text" aria-label="Your text" rows="2" maxlength="200" spellcheck="false" placeholder="Type something…"></textarea>
+    <div>
+      <h2 class="label">Styles</h2>
+      <div class="presets" id="presets"></div>
+    </div>
+  </section>
+
+  <aside class="panel" id="panel"></aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (() => {
-const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const $ = id => document.getElementById(id);
-const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const C = {hero:css('--hero'), hazard:css('--hazard'), gold:css('--gold'), ring:css('--ring'), ink:css('--ink'), sky2:css('--sky-2')};
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  const FONTS = [
+    ['Bungee', 400], ['Luckiest Guy', 400], ['Bangers', 400], ['Righteous', 400], ['Russo One', 400],
+    ['Black Ops One', 400], ['Lilita One', 400], ['Fredoka', 700], ['Press Start 2P', 400], ['Orbitron', 900],
+    ['Audiowide', 400], ['Cinzel', 900], ['Creepster', 400], ['Monoton', 400], ['Rubik Mono One', 400],
+    ['Anton', 400], ['Bebas Neue', 400], ['Permanent Marker', 400], ['Pacifico', 400], ['Silkscreen', 400],
+    ['Arial Black', 900, true], ['Impact', 400, true], ['Georgia', 700, true],
+  ].map(([family, weight, system]) => ({ family, weight, system: !!system }));
+  const fontOf = name => FONTS.find(f => f.family === name) || FONTS[0];
 
-let W, H, cx, cy, R, lanes;
-function resize(){
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = W * dpr; cv.height = H * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cx = W / 2; cy = H * 0.46;
-  R = Math.min(W * 0.46, H * 0.36);
-  lanes = [R * 0.58, R * 0.92];
-  stars = Array.from({length: Math.round(W * H / 5000)}, () => ({x: Math.random()*W, y: Math.random()*H, s: Math.random()*1.4+.3, t: Math.random()*6}));
-}
-let stars = [];
+  // Every effect setting. Presets are merged over this so nothing leaks between styles.
+  const BASE = {
+    fillMode: 'solid', c1: '#ffffff', c2: '#cccccc', c3: '#888888', gradDir: 'vertical', gloss: false,
+    o1w: 0, o1c: '#000000', o2w: 0, o2c: '#ffffff',
+    exDepth: 0, exColor: '#000000', exAngle: 90,
+    shOpacity: 0, shX: 0, shY: 10, shBlur: 16, shColor: '#000000',
+    glow: 0, glowColor: '#ffffff',
+    spacing: 0, slant: 0, upper: false, lineHeight: 1.05,
+  };
 
-// ---- sound ----
-let audio = null, muted = store.get('orbit-hop-muted') === '1';
-$('mute').textContent = muted ? 'Sound: off' : 'Sound: on';
-function beep(freq, dur = .08, type = 'sine', vol = .08, slide = 0){
-  if (muted) return;
+  const PRESETS = [
+    { name: 'Arcade', font: 'Bungee', upper: true, fillMode: 'gradient', c1: '#fff35c', c2: '#ff8a1f',
+      o1w: 5, o1c: '#3b0a5c', exDepth: 12, exColor: '#22053a', shOpacity: .5, shY: 14, shBlur: 20 },
+    { name: 'Neon', font: 'Righteous', c1: '#fff0fb', o1w: 3, o1c: '#ff3fd2', glow: 28, glowColor: '#ff3fd2' },
+    { name: 'Chrome', font: 'Russo One', upper: true, fillMode: 'split', c1: '#ffffff', c2: '#8f9ab0', c3: '#2b3245',
+      o1w: 3, o1c: '#0d111a', o2w: 3, o2c: '#c9d2e3', exDepth: 6, exColor: '#0d111a', shOpacity: .4 },
+    { name: 'Fire', font: 'Bangers', spacing: 2, fillMode: 'three', c1: '#fff59d', c2: '#ffb300', c3: '#e53900',
+      o1w: 4, o1c: '#5a0b00', glow: 22, glowColor: '#ff6a00' },
+    { name: 'Bubble', font: 'Luckiest Guy', c1: '#ff6fb5', gloss: true, o1w: 7, o1c: '#ffffff', o2w: 5, o2c: '#7a1e5c',
+      shOpacity: .35, shY: 10, shBlur: 14 },
+    { name: 'Comic', font: 'Bangers', spacing: 3, c1: '#ffd400', o1w: 5, o1c: '#111111',
+      exDepth: 10, exColor: '#111111', exAngle: 45 },
+    { name: 'Retro', font: 'Audiowide', upper: true, slant: -8, fillMode: 'gradient', gradDir: 'horizontal',
+      c1: '#3ff7ff', c2: '#ff3fd8', o1w: 2, o1c: '#ffffff', exDepth: 14, exColor: '#5b1a8a', exAngle: 45 },
+    { name: 'Pixel', font: 'Press Start 2P', upper: true, c1: '#ffffff', o1w: 4, o1c: '#000000',
+      shOpacity: 1, shX: 8, shY: 8, shBlur: 0, lineHeight: 1.3 },
+    { name: 'Ice', font: 'Lilita One', fillMode: 'gradient', c1: '#ffffff', c2: '#7fd8ff',
+      o1w: 4, o1c: '#1b5d8f', o2w: 4, o2c: '#e8fbff', glow: 16, glowColor: '#8fe6ff' },
+    { name: 'Slime', font: 'Fredoka', fillMode: 'gradient', c1: '#c8ff6b', c2: '#3fbf2a', gloss: true,
+      o1w: 5, o1c: '#1c4d0f', exDepth: 6, exColor: '#123308', shOpacity: .3 },
+    { name: 'Gold', font: 'Cinzel', upper: true, spacing: 4, fillMode: 'split', c1: '#fff4c2', c2: '#e3ac2c', c3: '#8c5a06',
+      o1w: 2, o1c: '#4a2c00', exDepth: 5, exColor: '#3a2200', shOpacity: .5 },
+    { name: 'Horror', font: 'Creepster', spacing: 2, fillMode: 'gradient', c1: '#ff4d4d', c2: '#6b0000',
+      o1w: 2, o1c: '#000000', glow: 14, glowColor: '#ff1a1a', shOpacity: .6 },
+  ];
+
+  const DEFAULTS = { text: 'TextForge', size: 140, align: 'center', bgMode: 'transparent', bg: '#14102b', pad: 40,
+    ...BASE, ...PRESETS[0] };
+  delete DEFAULTS.name;
+  // Settings that describe the image rather than the style, so changing them keeps the preset highlighted.
+  const LAYOUT_KEYS = ['text', 'size', 'align', 'pad', 'bgMode', 'bg'];
+
+  // Control panel schema: [section title, open?, fields]. A nested array is a row of fields.
+  const notSolid = s => s.fillMode !== 'solid';
+  const SECTIONS = [
+    ['Text', true, [
+      { k: 'font', type: 'select', label: 'Font', options: FONTS.map(f => [f.family, f.family]) },
+      { k: 'size', type: 'range', label: 'Size', min: 40, max: 300, step: 1, unit: 'px' },
+      [{ k: 'spacing', type: 'range', label: 'Spacing', min: -10, max: 40, step: 1 },
+       { k: 'lineHeight', type: 'range', label: 'Line height', min: .7, max: 2, step: .05 }],
+      [{ k: 'slant', type: 'range', label: 'Slant', min: -25, max: 25, step: 1, unit: '°' },
+       { k: 'align', type: 'select', label: 'Align', options: [['left', 'Left'], ['center', 'Center'], ['right', 'Right']] }],
+      { k: 'upper', type: 'check', label: 'ALL CAPS' },
+    ]],
+    ['Fill', true, [
+      [{ k: 'fillMode', type: 'select', label: 'Type', options: [['solid', 'Solid'], ['gradient', 'Gradient'], ['three', 'Three-tone'], ['split', 'Metal (split)']] },
+       { k: 'gradDir', type: 'select', label: 'Direction', show: notSolid, options: [['vertical', 'Top → bottom'], ['horizontal', 'Left → right'], ['diagonal', 'Diagonal']] }],
+      [{ k: 'c1', type: 'color', label: 'Color 1' },
+       { k: 'c2', type: 'color', label: 'Color 2', show: notSolid },
+       { k: 'c3', type: 'color', label: 'Color 3', show: s => s.fillMode === 'three' || s.fillMode === 'split' }],
+      { k: 'gloss', type: 'check', label: 'Glossy highlight' },
+    ]],
+    ['Outline', true, [
+      [{ k: 'o1w', type: 'range', label: 'Inner width', min: 0, max: 20, step: 1 }, { k: 'o1c', type: 'color', label: 'Color' }],
+      [{ k: 'o2w', type: 'range', label: 'Outer width', min: 0, max: 20, step: 1 }, { k: 'o2c', type: 'color', label: 'Color' }],
+    ]],
+    ['3D', false, [
+      { k: 'exDepth', type: 'range', label: 'Depth', min: 0, max: 40, step: 1 },
+      [{ k: 'exAngle', type: 'range', label: 'Direction', min: 0, max: 355, step: 5, unit: '°' }, { k: 'exColor', type: 'color', label: 'Color' }],
+    ]],
+    ['Shadow', false, [
+      [{ k: 'shOpacity', type: 'range', label: 'Opacity', min: 0, max: 1, step: .05 }, { k: 'shColor', type: 'color', label: 'Color' }],
+      [{ k: 'shX', type: 'range', label: 'X', min: -40, max: 40, step: 1 }, { k: 'shY', type: 'range', label: 'Y', min: -40, max: 40, step: 1 }],
+      { k: 'shBlur', type: 'range', label: 'Blur', min: 0, max: 60, step: 1 },
+    ]],
+    ['Glow', false, [
+      [{ k: 'glow', type: 'range', label: 'Size', min: 0, max: 60, step: 1 }, { k: 'glowColor', type: 'color', label: 'Color' }],
+    ]],
+    ['Image', false, [
+      [{ k: 'bgMode', type: 'select', label: 'Background', options: [['transparent', 'Transparent'], ['solid', 'Solid color']] },
+       { k: 'bg', type: 'color', label: 'Color', show: s => s.bgMode === 'solid' }],
+      { k: 'pad', type: 'range', label: 'Padding', min: 0, max: 160, step: 2, unit: 'px' },
+    ]],
+  ];
+
+  // ---------- state ----------
+  const STORE = 'textforge:v1';
+  const state = { ...DEFAULTS };
   try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
-    o.type = type; o.frequency.setValueAtTime(freq, t);
-    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t + dur);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur);
-  } catch(e) {}
-}
-$('mute').addEventListener('click', e => {
-  e.stopPropagation(); muted = !muted;
-  store.set('orbit-hop-muted', muted ? '1' : '0');
-  $('mute').textContent = muted ? 'Sound: off' : 'Sound: on';
-});
-$('mute').addEventListener('pointerdown', e => e.stopPropagation());
+    const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (saved && typeof saved === 'object') for (const k in DEFAULTS) if (typeof saved[k] === typeof DEFAULTS[k]) state[k] = saved[k];
+  } catch (e) {}
+  if (!FONTS.some(f => f.family === state.font)) state.font = DEFAULTS.font;
+  let activePreset = null;
 
-// ---- state ----
-let mode = 'title', best = +(store.get('orbit-hop-best') || 0), score, p, objs, parts, trail, nextSpawn, shake, deadAt, time = 0;
-$('best').textContent = best;
-function reset(){
-  score = 0; objs = []; parts = []; trail = []; shake = 0;
-  p = {ang: -Math.PI/2, lane: 1, r: lanes[1], w: 1.55, pulse: 0};
-  nextSpawn = p.ang + 0.3;
-}
+  // ---------- renderer ----------
+  const measure = document.createElement('canvas').getContext('2d');
+  const makeCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const rgba = (hex, a) => {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+  };
 
-function speed(){ return Math.min(1.55 + score * 0.011, 3.4); }
-function spawn(){
-  const a = p.ang + 2.7, lane = Math.random() < .5 ? 0 : 1;
-  const roll = Math.random();
-  if (roll < .22) objs.push({a, lane, kind: 'gem', born: time});
-  else {
-    objs.push({a, lane, kind: 'rock', born: time, spin: Math.random()*6});
-    if (roll > .82 && score > 6) objs.push({a, lane: 1 - lane, kind: 'gem', born: time});
-  }
-  const gap = Math.max(0.52, 1.05 - score * 0.006);
-  nextSpawn += gap + Math.random() * 0.45;
-}
-function burst(x, y, color, n, sp){
-  for (let i = 0; i < n; i++){
-    const t = Math.random()*Math.PI*2, v = (Math.random()*.7+.3) * sp;
-    parts.push({x, y, vx: Math.cos(t)*v, vy: Math.sin(t)*v, life: 1, color, s: Math.random()*2.5+1});
-  }
-}
-function pos(ang, r){ return [cx + Math.cos(ang)*r, cy + Math.sin(ang)*r]; }
+  function render(s, maxDim = 4096) {
+    const f = fontOf(s.font);
+    const fontAt = px => `${f.weight} ${px}px "${f.family}", sans-serif`;
+    let text = s.text && s.text.trim() ? s.text : ' ';
+    if (s.upper) text = text.toUpperCase();
+    const lines = text.split('\n');
+    const tanS = Math.tan(s.slant * Math.PI / 180);
 
-function act(){
-  if (mode === 'play'){
-    p.lane = 1 - p.lane; p.pulse = 1;
-    beep(p.lane ? 520 : 390, .07, 'triangle', .06);
-  } else if (mode === 'title' || (mode === 'over' && time - deadAt > .6)){
-    reset(); mode = 'play'; $('panel').hidden = true; beep(660, .12, 'sine', .07, 400);
-  }
-}
-cv.addEventListener('pointerdown', e => { e.preventDefault(); act(); });
-addEventListener('keydown', e => {
-  if (['Space','ArrowUp','ArrowDown','Enter'].includes(e.code)){ e.preventDefault(); act(); }
-});
+    // Pick a scale that keeps the working canvas under maxDim.
+    measure.font = fontAt(s.size);
+    let widest = 1;
+    for (const l of lines) widest = Math.max(widest, measure.measureText(l).width + Math.max(0, [...l].length - 1) * s.spacing);
+    const fx = s.o1w + s.o2w + s.exDepth + Math.max(Math.abs(s.shX), Math.abs(s.shY)) + s.shBlur * 1.5 + s.glow * 1.5;
+    const marginAt1 = s.size * 0.5 + fx + Math.abs(tanS) * s.size * lines.length * s.lineHeight;
+    const est = Math.max(widest + 2 * marginAt1, lines.length * s.size * s.lineHeight + 2 * marginAt1);
+    const k = est > maxDim ? maxDim / est : 1;
 
-function die(){
-  mode = 'over'; deadAt = time; shake = reduced ? 0 : 14;
-  const [x, y] = pos(p.ang, p.r);
-  burst(x, y, C.hazard, 40, 260); burst(x, y, C.hero, 24, 180);
-  beep(180, .45, 'sawtooth', .07, -140);
-  const isBest = score > best;
-  if (isBest){ best = score; store.set('orbit-hop-best', best); $('best').textContent = best; }
-  $('headline').innerHTML = isBest && score > 0 ? 'NEW <span>BEST</span>' : 'CRASH<span>ED</span>';
-  $('msg').textContent = `You scored ${score}. ` + (isBest && score > 0 ? 'That is your best run yet.' : `Your best is ${best}.`);
-  $('legend').hidden = true; $('go').textContent = 'TAP TO FLY AGAIN';
-  $('panel').hidden = false;
-}
-
-// ---- loop ----
-function update(dt){
-  time += dt;
-  for (const s of parts){ s.x += s.vx*dt; s.y += s.vy*dt; s.vx *= .96; s.vy *= .96; s.life -= dt*1.4; }
-  parts = parts.filter(s => s.life > 0);
-  shake *= .88;
-  if (mode !== 'play'){ if (mode === 'title') p.ang += dt * .8; p.r += (lanes[p.lane]-p.r)*Math.min(1, dt*16); return; }
-
-  p.w = speed();
-  p.ang += p.w * dt;
-  p.r += (lanes[p.lane] - p.r) * Math.min(1, dt * 16);
-  p.pulse = Math.max(0, p.pulse - dt*4);
-  while (nextSpawn <= p.ang) spawn();
-
-  const [px, py] = pos(p.ang, p.r), pr = R * .05;
-  trail.push([px, py]); if (trail.length > 22) trail.shift();
-  for (const o of objs){
-    const [ox, oy] = pos(o.a, lanes[o.lane]);
-    const d = Math.hypot(px-ox, py-oy);
-    if (o.kind === 'rock' && d < pr + R*.05){ die(); return; }
-    if (o.kind === 'gem' && !o.got && d < pr + R*.075){
-      o.got = true; score += 5; burst(ox, oy, C.gold, 18, 150); beep(880, .1, 'square', .04, 500);
-    }
-    if (o.kind === 'rock' && !o.passed && o.a < p.ang - .15){ o.passed = true; score += 1; }
-  }
-  objs = objs.filter(o => o.a > p.ang - .7 && !o.got);
-}
-
-function draw(){
-  ctx.save();
-  ctx.fillStyle = css('--sky'); ctx.fillRect(0, 0, W, H);
-  if (shake > .3) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
-  const g = ctx.createRadialGradient(cx, cy, R*.2, cx, cy, Math.max(W, H)*.8);
-  g.addColorStop(0, C.sky2); g.addColorStop(1, 'rgba(13,11,38,0)');
-  ctx.fillStyle = g; ctx.fillRect(-20, -20, W+40, H+40);
-  for (const s of stars){
-    ctx.globalAlpha = .35 + .35*Math.sin(time*1.5 + s.t);
-    ctx.fillStyle = C.ink; ctx.fillRect(s.x, s.y, s.s, s.s);
-  }
-  ctx.globalAlpha = 1;
-
-  // orbits
-  ctx.lineWidth = 2; ctx.setLineDash([3, 9]);
-  lanes.forEach((r, i) => {
-    ctx.strokeStyle = C.ring; ctx.globalAlpha = p.lane === i ? .9 : .4;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
-  });
-  ctx.setLineDash([]); ctx.globalAlpha = 1;
-
-  // planet with score
-  const pg = ctx.createRadialGradient(cx - R*.1, cy - R*.1, R*.03, cx, cy, R*.36);
-  pg.addColorStop(0, '#8c7bff'); pg.addColorStop(1, '#2a1f6e');
-  ctx.shadowColor = '#7a6cff'; ctx.shadowBlur = 40;
-  ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(cx, cy, R*.33, 0, Math.PI*2); ctx.fill();
-  ctx.shadowBlur = 0;
-  if (mode !== 'title'){
-    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `${Math.round(R*.2)}px Bungee, Impact, sans-serif`;
-    ctx.fillText(score, cx, cy + R*.01);
-  }
-
-  // objects
-  for (const o of objs){
-    const [x, y] = pos(o.a, lanes[o.lane]);
-    const k = Math.min(1, (time - o.born) * 4), s = R * .06 * k;
-    ctx.save(); ctx.translate(x, y);
-    if (o.kind === 'rock'){
-      ctx.rotate(o.spin + time * 2.2);
-      ctx.shadowColor = C.hazard; ctx.shadowBlur = 16; ctx.fillStyle = C.hazard;
-      ctx.beginPath();
-      for (let i = 0; i < 8; i++){ const rr = i % 2 ? s*.55 : s; const t = i*Math.PI/4; ctx.lineTo(Math.cos(t)*rr, Math.sin(t)*rr); }
-      ctx.closePath(); ctx.fill();
-    } else {
-      const b = 1 + Math.sin(time*6 + o.a)*.12;
-      ctx.scale(b, b); ctx.rotate(Math.PI/4);
-      ctx.shadowColor = C.gold; ctx.shadowBlur = 18; ctx.fillStyle = C.gold;
-      ctx.fillRect(-s*.55, -s*.55, s*1.1, s*1.1);
-    }
-    ctx.restore();
-  }
-
-  // trail + player
-  if (mode !== 'over'){
-    trail.forEach(([x, y], i) => {
-      ctx.globalAlpha = i / trail.length * .5; ctx.fillStyle = C.hero;
-      ctx.beginPath(); ctx.arc(x, y, R*.05 * (i/trail.length), 0, Math.PI*2); ctx.fill();
+    const fs = s.size * k, sp = s.spacing * k, lh = fs * s.lineHeight;
+    measure.font = fontAt(fs);
+    const layout = lines.map(l => {
+      const chars = [...l];
+      let xs = null, w = measure.measureText(l).width;
+      if (sp) {
+        xs = []; let x = 0;
+        for (const c of chars) { xs.push(x); x += measure.measureText(c).width + sp; }
+        w = Math.max(0, x - sp);
+      }
+      return { text: l, chars, xs, w };
     });
-    ctx.globalAlpha = 1;
-    const [x, y] = pos(p.ang, p.r);
-    ctx.shadowColor = C.hero; ctx.shadowBlur = 22; ctx.fillStyle = C.hero;
-    ctx.beginPath(); ctx.arc(x, y, R*.05 * (1 + p.pulse*.35), 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
+    const blockW = Math.max(1, ...layout.map(L => L.w));
+    const margin = Math.ceil(marginAt1 * k + 4);
+    const W = Math.ceil(blockW + margin * 2);
+    const H = Math.ceil(lines.length * lh + margin * 2 + fs * 0.3);
+    layout.forEach((L, i) => {
+      L.x = s.align === 'left' ? margin : s.align === 'right' ? margin + blockW - L.w : margin + (blockW - L.w) / 2;
+      L.base = margin + fs * 0.85 + i * lh;
+    });
+
+    const withSlant = (ctx, fn) => {
+      ctx.save();
+      if (tanS) { ctx.translate(0, H / 2); ctx.transform(1, 0, -tanS, 1, 0, 0); ctx.translate(0, -H / 2); }
+      fn(); ctx.restore();
+    };
+    const paint = (ctx, op, dx, dy, styleFor) => withSlant(ctx, () => {
+      ctx.font = fontAt(fs); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      for (const L of layout) {
+        const st = styleFor(L);
+        if (op === 'fill') ctx.fillStyle = st; else ctx.strokeStyle = st;
+        const draw = (t, x) => op === 'fill' ? ctx.fillText(t, x + dx, L.base + dy) : ctx.strokeText(t, x + dx, L.base + dy);
+        if (!L.xs) draw(L.text, L.x); else L.chars.forEach((c, j) => draw(c, L.x + L.xs[j]));
+      }
+    });
+    const fillFor = ctx => L => {
+      if (s.fillMode === 'solid') return s.c1;
+      const top = L.base - fs * 0.75, bot = L.base + fs * 0.08;
+      const g = s.gradDir === 'horizontal' ? ctx.createLinearGradient(L.x, 0, L.x + Math.max(1, L.w), 0)
+        : s.gradDir === 'diagonal' ? ctx.createLinearGradient(L.x, top, L.x + Math.max(1, L.w), bot)
+        : ctx.createLinearGradient(0, top, 0, bot);
+      if (s.fillMode === 'gradient') { g.addColorStop(0, s.c1); g.addColorStop(1, s.c2); }
+      else if (s.fillMode === 'three') { g.addColorStop(0, s.c1); g.addColorStop(.5, s.c2); g.addColorStop(1, s.c3); }
+      else { g.addColorStop(0, s.c1); g.addColorStop(.5, s.c2); g.addColorStop(.52, s.c3); g.addColorStop(1, s.c2); }
+      return g;
+    };
+
+    // Object layer: 3D extrusion, outlines, then the face on top.
+    const obj = makeCanvas(W, H), oc = obj.getContext('2d');
+    oc.lineJoin = 'round'; oc.lineCap = 'round';
+    const outer = (s.o1w + s.o2w) * k;
+    if (s.exDepth > 0) {
+      const d = s.exDepth * k, a = s.exAngle * Math.PI / 180, steps = Math.max(1, Math.ceil(d));
+      oc.lineWidth = outer * 2;
+      for (let i = steps; i >= 1; i--) {
+        const t = i / steps * d, dx = Math.cos(a) * t, dy = Math.sin(a) * t;
+        if (outer > 0) paint(oc, 'stroke', dx, dy, () => s.exColor);
+        paint(oc, 'fill', dx, dy, () => s.exColor);
+      }
+    }
+    if (s.o2w > 0) { oc.lineWidth = outer * 2; paint(oc, 'stroke', 0, 0, () => s.o2c); }
+    if (s.o1w > 0) { oc.lineWidth = s.o1w * k * 2; paint(oc, 'stroke', 0, 0, () => s.o1c); }
+    const face = makeCanvas(W, H), fc = face.getContext('2d');
+    paint(fc, 'fill', 0, 0, fillFor(fc));
+    if (s.gloss) {
+      fc.globalCompositeOperation = 'source-atop';
+      withSlant(fc, () => {
+        for (const L of layout) {
+          const y0 = L.base - fs * 0.9, y1 = L.base - fs * 0.36;
+          const g = fc.createLinearGradient(0, y0, 0, y1);
+          g.addColorStop(0, 'rgba(255,255,255,.7)'); g.addColorStop(1, 'rgba(255,255,255,.12)');
+          fc.fillStyle = g; fc.fillRect(L.x - fs, y0, L.w + fs * 2, y1 - y0);
+        }
+      });
+    }
+    oc.drawImage(face, 0, 0);
+
+    // Composite with drop shadow and glow.
+    const comp = makeCanvas(W, H), cc = comp.getContext('2d');
+    if (s.shOpacity > 0) {
+      cc.save();
+      cc.shadowColor = rgba(s.shColor, s.shOpacity); cc.shadowBlur = s.shBlur * k;
+      cc.shadowOffsetX = s.shX * k; cc.shadowOffsetY = s.shY * k;
+      cc.drawImage(obj, 0, 0); cc.restore();
+    }
+    if (s.glow > 0) {
+      cc.save(); cc.shadowColor = s.glowColor;
+      cc.shadowBlur = s.glow * k; cc.drawImage(obj, 0, 0);
+      cc.shadowBlur = s.glow * k * 0.4; cc.drawImage(obj, 0, 0);
+      cc.restore();
+    }
+    cc.drawImage(obj, 0, 0);
+
+    // Crop to the visible pixels, then pad and add the background.
+    const px = new Uint32Array(cc.getImageData(0, 0, W, H).data.buffer);
+    let minX = W, minY = H, maxX = -1, maxY = -1;
+    for (let y = 0; y < H; y++) {
+      const row = y * W;
+      for (let x = 0; x < W; x++) {
+        if ((px[row + x] >>> 24) > 6) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          maxY = y;
+        }
+      }
+    }
+    const pad = Math.round(s.pad * k);
+    const cw = maxX < 0 ? 0 : maxX - minX + 1, ch = maxX < 0 ? 0 : maxY - minY + 1;
+    const out = makeCanvas(Math.max(1, cw + pad * 2), Math.max(1, ch + pad * 2));
+    const ctx = out.getContext('2d');
+    if (s.bgMode === 'solid') { ctx.fillStyle = s.bg; ctx.fillRect(0, 0, out.width, out.height); }
+    if (cw) ctx.drawImage(comp, minX, minY, cw, ch, pad, pad, cw, ch);
+    return out;
   }
 
-  for (const s of parts){
-    ctx.globalAlpha = Math.max(0, s.life); ctx.fillStyle = s.color;
-    ctx.fillRect(s.x, s.y, s.s, s.s);
-  }
-  ctx.restore();
-}
+  // ---------- UI ----------
+  const $ = id => document.getElementById(id);
+  const outCanvas = $('out'), textArea = $('text');
+  const controls = {}; // key -> { input, out, field, def }
 
-let last = performance.now();
-function frame(now){
-  const dt = Math.min(.05, (now - last) / 1000); last = now;
-  update(dt); draw(); requestAnimationFrame(frame);
-}
-addEventListener('resize', () => { resize(); p.r = lanes[p.lane]; });
-resize(); reset(); requestAnimationFrame(frame);
+  const fmt = (def, v) => (def.step < 1 ? (+v).toFixed(2).replace(/\.?0+$/, '') : String(Math.round(v))) + (def.unit || '');
+
+  function buildField(def) {
+    const field = document.createElement('div');
+    field.className = 'field';
+    const id = 'f-' + def.k;
+    let input, out = null;
+    if (def.type === 'check') {
+      const lab = document.createElement('label');
+      lab.className = 'check';
+      input = document.createElement('input'); input.type = 'checkbox'; input.id = id;
+      lab.append(input, document.createTextNode(def.label));
+      field.append(lab);
+    } else {
+      const top = document.createElement('div'); top.className = 'top';
+      const lab = document.createElement('label'); lab.htmlFor = id; lab.textContent = def.label;
+      top.append(lab);
+      if (def.type === 'range') { out = document.createElement('output'); out.htmlFor = id; top.append(out); }
+      if (def.type === 'select') {
+        input = document.createElement('select');
+        for (const [v, t] of def.options) { const o = document.createElement('option'); o.value = v; o.textContent = t; input.append(o); }
+      } else {
+        input = document.createElement('input'); input.type = def.type;
+        if (def.type === 'range') { input.min = def.min; input.max = def.max; input.step = def.step; }
+      }
+      input.id = id;
+      field.append(top, input);
+    }
+    controls[def.k] = { input, out, field, def };
+    input.addEventListener('input', () => {
+      const v = def.type === 'check' ? input.checked : def.type === 'range' ? parseFloat(input.value) : input.value;
+      set({ [def.k]: v });
+    });
+    return field;
+  }
+
+  function buildPanel() {
+    const panel = $('panel');
+    for (const [title, open, fields] of SECTIONS) {
+      const d = document.createElement('details'); d.open = open;
+      const sum = document.createElement('summary'); sum.textContent = title;
+      const box = document.createElement('div'); box.className = 'fields';
+      for (const item of fields) {
+        if (Array.isArray(item)) {
+          const row = document.createElement('div'); row.className = 'row';
+          item.forEach(def => row.append(buildField(def)));
+          box.append(row);
+        } else box.append(buildField(item));
+      }
+      d.append(sum, box); panel.append(d);
+    }
+    const foot = document.createElement('div'); foot.className = 'panel-foot';
+    const reset = document.createElement('button'); reset.className = 'btn small'; reset.type = 'button'; reset.textContent = 'Reset everything';
+    reset.onclick = () => { set({ ...DEFAULTS }); activePreset = PRESETS[0].name; syncControls(); };
+    foot.append(reset); panel.append(foot);
+  }
+
+  function syncControls() {
+    if (textArea.value !== state.text) textArea.value = state.text;
+    for (const k in controls) {
+      const { input, out, field, def } = controls[k];
+      if (def.type === 'check') input.checked = !!state[k];
+      else if (String(input.value) !== String(state[k])) input.value = state[k];
+      if (out) out.textContent = fmt(def, state[k]);
+      if (def.show) field.hidden = !def.show(state);
+    }
+    document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.name === activePreset)));
+  }
+
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      const img = render(state);
+      outCanvas.width = img.width; outCanvas.height = img.height;
+      outCanvas.getContext('2d').drawImage(img, 0, 0);
+      $('dims').textContent = `${img.width} × ${img.height} px`;
+      try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
+    });
+  }
+
+  function set(patch, fromPreset) {
+    Object.assign(state, patch);
+    if (!fromPreset && Object.keys(patch).some(k => !LAYOUT_KEYS.includes(k))) activePreset = null;
+    syncControls();
+    if (patch.font) ensureFont(patch.font).then(schedule);
+    schedule();
+  }
+
+  function applyPreset(p) {
+    const { name, ...rest } = p;
+    activePreset = name;
+    set({ ...BASE, ...rest }, true);
+  }
+
+  const loading = {};
+  function ensureFont(name) {
+    const f = fontOf(name);
+    if (f.system || !document.fonts) return Promise.resolve();
+    return loading[name] || (loading[name] = document.fonts.load(`${f.weight} 48px "${f.family}"`, 'TextForge 123').catch(() => {}));
+  }
+
+  function buildPresets() {
+    const box = $('presets');
+    for (const p of PRESETS) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'preset'; b.dataset.name = p.name; b.title = p.name;
+      b.setAttribute('aria-label', p.name + ' style');
+      b.onclick = () => applyPreset(p);
+      box.append(b);
+    }
+  }
+
+  function drawPresetThumbs() {
+    document.querySelectorAll('.preset').forEach(b => {
+      const { name, ...rest } = PRESETS.find(x => x.name === b.dataset.name);
+      const s = { ...DEFAULTS, ...BASE, ...rest, text: name, size: 64, pad: 4, align: 'center', bgMode: 'transparent' };
+      const img = document.createElement('img');
+      img.alt = ''; img.src = render(s, 900).toDataURL();
+      b.replaceChildren(img);
+    });
+  }
+
+  // ---------- shuffle ----------
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  function hsl(h, sat, l) {
+    h = ((h % 360) + 360) % 360; sat /= 100; l /= 100;
+    const f = n => { const k = (n + h / 30) % 12, a = sat * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+    return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+  }
+  function shuffle() {
+    const h = rnd(0, 360);
+    const dark = hsl(h + pick([0, 180, 220]), 60, rnd(8, 18));
+    set({
+      ...BASE,
+      font: pick(FONTS.filter(f => !f.system)).family,
+      upper: Math.random() < .5, spacing: pick([0, 0, 1, 2, 4]),
+      fillMode: pick(['solid', 'gradient', 'gradient', 'three', 'split']),
+      gradDir: pick(['vertical', 'vertical', 'horizontal', 'diagonal']),
+      c1: hsl(h, 95, rnd(68, 85)), c2: hsl(h + rnd(15, 45), 90, rnd(45, 58)), c3: hsl(h + rnd(30, 70), 80, rnd(22, 35)),
+      gloss: Math.random() < .3,
+      o1w: Math.round(rnd(2, 8)), o1c: dark,
+      o2w: Math.random() < .35 ? Math.round(rnd(2, 6)) : 0, o2c: Math.random() < .5 ? '#ffffff' : hsl(h + 180, 80, 60),
+      exDepth: Math.random() < .55 ? Math.round(rnd(4, 18)) : 0, exColor: dark, exAngle: pick([90, 90, 45, 135]),
+      shOpacity: Math.random() < .6 ? +rnd(.3, .6).toFixed(2) : 0, shY: Math.round(rnd(6, 16)), shBlur: Math.round(rnd(8, 24)),
+      glow: Math.random() < .3 ? Math.round(rnd(10, 30)) : 0, glowColor: hsl(h, 100, 60),
+    });
+  }
+
+  // ---------- actions ----------
+  const toast = msg => {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 1800);
+  };
+  const fileName = () => (state.text.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'text') + '.png';
+
+  $('download').onclick = () => {
+    outCanvas.toBlob(blob => {
+      if (!blob) return toast('Could not create the image');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = fileName();
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }, 'image/png');
+  };
+  $('copy').onclick = async () => {
+    try {
+      const blob = new Promise((res, rej) => outCanvas.toBlob(b => b ? res(b) : rej(), 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('Image copied');
+    } catch (e) { toast('Copy isn’t supported here — use Download'); }
+  };
+  $('shuffle').onclick = shuffle;
+  $('previewBg').onclick = e => {
+    const light = $('preview').classList.toggle('light');
+    e.currentTarget.textContent = light ? 'Dark preview' : 'Light preview';
+  };
+  textArea.addEventListener('input', () => set({ text: textArea.value }));
+
+  // ---------- boot ----------
+  buildPanel();
+  buildPresets();
+  syncControls();
+  schedule();
+  drawPresetThumbs();
+  Promise.all(FONTS.map(f => ensureFont(f.family))).then(() => { drawPresetThumbs(); schedule(); });
+  if (document.fonts) document.fonts.addEventListener('loadingdone', schedule);
 })();
 </script>
 </body>
