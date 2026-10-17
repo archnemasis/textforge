@@ -27,10 +27,13 @@ window.TF_FONTS = [
   {
     name: 'Roblox 2006',
     file: 'fonts/Roblox2006.ttf',
-    sample: 'ROBLOX',
+    // This font draws each letter as a ring, so the inside is filled white instead of outlining.
+    // Lowercase o has no bar on top, so "ROBLoX" matches the logo.
+    sample: 'ROBLoX',
     preset: {
-      pal: ['#e2231a'],
-      out: 14, outc: '#000000',
+      pal: ['#ff0000'],
+      hole: true, holec: '#ffffff',
+      out: 0, outc: '#ff0000',
       dep: 0, dang: 90, depc: '#000000',
       lh: 90, sp: 0
     }

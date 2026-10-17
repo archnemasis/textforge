@@ -109,7 +109,8 @@ FONT</textarea>
 <section id="t-styles" class="three">
  <div class="col"><h3>Filling</h3><div class="sw" id="sw"></div>
  <div class="line"><button class="sm" id="addc">+ Color</button><button class="sm" id="remc">- Color</button></div>
- <label class="row"><input type="checkbox" id="spc"> Spaces use up a color</label></div>
+ <label class="row"><input type="checkbox" id="spc"> Spaces use up a color</label>
+ <label class="row"><input type="checkbox" id="hole"> Fill inside of letters <input type="color" id="holec" value="#ffffff" style="width:48px;height:36px;border:1px solid var(--line);border-radius:8px;padding:0"></label></div>
  <div class="col" id="c-out"><h3>Outline</h3></div>
  <div class="col" id="c-dep"><h3>3D shadow</h3></div>
 </section>
@@ -209,6 +210,7 @@ gc.fillStyle=oc;gc.strokeStyle=oc;if(OUT>0)gc.strokeText(t.ch,t.x,t.y);
 gc.fillStyle=t.col;gc.fillText(t.ch,t.x,t.y)
 }
 });
+if($('hole').checked)fillHoles(gc,W,H,$('holec').value);
 const px=gc.getImageData(0,0,W,H).data;let x0=W,x1=-1,y0=H,y1=-1;
 for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(px[(y*W+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
 if(x1<0){window.FULL=null;const cv=$('cv');cv.width=cv.height=1;return}
@@ -216,7 +218,17 @@ const mg=Math.round(F*0.03),full=document.createElement('canvas');full.width=x1-
 full.getContext('2d').drawImage(big,x0,y0,x1-x0+1,y1-y0+1,mg,mg,x1-x0+1,y1-y0+1);window.FULL=full;window.FQ=Q;fit()}
 function stageBg(){const s=$('stage');s.style.background=$('bgm').value=='color'?$('bgc').value:'';s.classList.toggle('checker',$('chk').checked&&$('bgm').value=='none')}
 ['bgm','bgc','chk'].forEach(i=>$(i).addEventListener('input',stageBg));
-['txt','spc'].forEach(i=>$(i).addEventListener('input',scheduleDraw));
+// Paint every pixel the outside can't reach (the inside of letters drawn as rings) behind the artwork.
+function fillHoles(gc,W,H,col){
+const d=gc.getImageData(0,0,W,H).data,n=W*H,out=new Uint8Array(n),st=new Int32Array(n);let sp=0;
+const push=i=>{if(!out[i]&&d[i*4+3]<128){out[i]=1;st[sp++]=i}};
+for(let x=0;x<W;x++){push(x);push((H-1)*W+x)}for(let y=0;y<H;y++){push(y*W);push(y*W+W-1)}
+while(sp){const i=st[--sp],x=i%W;if(x>0)push(i-1);if(x<W-1)push(i+1);if(i>=W)push(i-W);if(i<n-W)push(i+W)}
+const c=parseInt(col.slice(1),16),r=c>>16&255,g2=c>>8&255,b=c&255,m=new ImageData(W,H),md=m.data;
+for(let i=0;i<n;i++)if(!out[i]){const p=i*4;md[p]=r;md[p+1]=g2;md[p+2]=b;md[p+3]=255}
+const t=document.createElement('canvas');t.width=W;t.height=H;t.getContext('2d').putImageData(m,0,0);
+gc.save();gc.setTransform(1,0,0,1,0,0);gc.globalCompositeOperation='destination-over';gc.drawImage(t,0,0);gc.restore()}
+['txt','spc','hole','holec'].forEach(i=>$(i).addEventListener('input',scheduleDraw));
 $('save').onclick=()=>{clearTimeout(fullDrawTimer);draw(false);if(!window.FULL)return;let c=window.FULL;if($('bgm').value=='color'){c=document.createElement('canvas');c.width=FULL.width;c.height=FULL.height;const x=c.getContext('2d');x.fillStyle=$('bgc').value;x.fillRect(0,0,c.width,c.height);x.drawImage(FULL,0,0)}
 const a=document.createElement('a');
 const rawName=($('txt').value.trim()
@@ -236,6 +248,7 @@ function applyPreset(f,prev){if($('keep').checked)return;const p=f.preset||{};
 if(p.pal){PAL=p.pal.slice();swatches()}
 ['out','dep','dang','lh','sp','zoom','rot'].forEach(k=>setV(k,p[k]));
 if(p.outc)$('outc').value=p.outc;if(p.depc)$('depc').value=p.depc;
+$('hole').checked=!!p.hole;if(p.holec)$('holec').value=p.holec;
 const t=$('txt').value;if(f.sample&&(!t.trim()||(prev&&t===prev.sample)))$('txt').value=f.sample}
 function renderList(){const l=$('flist');l.innerHTML='';FONTS.forEach((f,i)=>{const b=document.createElement('button');b.textContent=f.name;b.style.fontFamily='"'+f.fam+'"';b.className=i===curF?'on':'';b.onclick=()=>{const prev=FONTS[curF];curF=i;applyPreset(f,prev);$('fname').textContent=f.name;$('fname').style.fontFamily='"'+f.fam+'"';l.classList.remove('open');renderList();draw()};l.appendChild(b)});
 const a=document.createElement('button');a.className='add';a.textContent='+ Add a font file (.ttf / .otf) for this session';a.onclick=()=>$('ffile').click();l.appendChild(a)}
